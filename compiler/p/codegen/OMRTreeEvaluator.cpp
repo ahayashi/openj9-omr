@@ -912,7 +912,15 @@ OMR::Power::TreeEvaluator::vcmpltEvaluator(TR::Node *node, TR::CodeGenerator *cg
 TR::Register*
 OMR::Power::TreeEvaluator::vcmpgtEvaluator(TR::Node *node, TR::CodeGenerator *cg)
    {
-   return TR::TreeEvaluator::unImpOpEvaluator(node, cg);
+     TR::Node *firstChild = node->getChild(0);
+     TR::Node *secondChild = node->getChild(1);
+     TR_ASSERT(firstChild->getDataType() == secondChild->getDataType(), "the children of vcmpgt have different vector type %s %s\n", firstChild->getDataType().toString(), secondChild->getDataType().toString());
+     switch(firstChild->getDataType())
+     {
+     case TR::VectorFloat: return vscmpgtEvaluator(node, cg);
+     case TR::VectorDouble: return vdcmpgtEvaluator(node, cg);
+     default: TR_ASSERT(false, "unrecognized vector type %s\n", node->getDataType().toString()); return NULL;
+     }
    }
 
 TR::Register*
@@ -960,7 +968,7 @@ OMR::Power::TreeEvaluator::vcalliEvaluator(TR::Node *node, TR::CodeGenerator *cg
 TR::Register*
 OMR::Power::TreeEvaluator::vselectEvaluator(TR::Node *node, TR::CodeGenerator *cg)
    {
-   return TR::TreeEvaluator::unImpOpEvaluator(node, cg);
+   return vdselEvaluator(node, cg);
    }
 
 TR::Register*
@@ -3368,6 +3376,11 @@ TR::Register *OMR::Power::TreeEvaluator::vimergeEvaluator(TR::Node *node, TR::Co
 TR::Register *OMR::Power::TreeEvaluator::vdselEvaluator(TR::Node *node, TR::CodeGenerator *cg)
    {
    return TR::TreeEvaluator::inlineVectorBitSelectOp(node, cg, TR::InstOpCode::xxsel);
+   }
+
+TR::Register *OMR::Power::TreeEvaluator::vscmpgtEvaluator(TR::Node *node, TR::CodeGenerator *cg)
+   {
+   return TR::TreeEvaluator::inlineVectorBinaryOp(node, cg, TR::InstOpCode::xvcmpgtsp);
    }
 
 TR::Register *OMR::Power::TreeEvaluator::vdcmpgtEvaluator(TR::Node *node, TR::CodeGenerator *cg)
